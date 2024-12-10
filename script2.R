@@ -39,11 +39,13 @@ numeric_vars <- c("Age", "SibSp", "Parch", "Fare")
 
 # function for displaying PCAMIX
 display_pcamix <- function(data, categorical_vars, numeric_vars) {
-    result <- PCAmix(X.quanti = data[, numeric_vars], X.quali = data[, categorical_vars], rename.level=TRUE, ndim = 10, graph = FALSE)
+    result <- PCAmix(X.quanti = data[, numeric_vars], X.quali = data[, categorical_vars], 
+        rename.level=TRUE, ndim = 10, graph = FALSE) 
     head(result$eig)
     plot(result, axes = 1:2, choice="cor", main="Correlation Circle")
     plot(result, axes = 1:2, choice="levels", main="Levels")
-    plot(result, axes = 1:2, choice="ind", lim.cos2.plot=0.1, main="Individuals component map")
+    plot(result, axes = 1:2, choice="ind", lim.cos2.plot=0.1, 
+        main="Individuals component map")
     plot(result, axes = 1:2, choice="sqload", main="Squared loadings")
     return(result)
 }
@@ -53,7 +55,8 @@ result <- display_pcamix(data, categorical_vars, numeric_vars)
 
 # function to do kmeansvar
 do_kmeansvar <- function(data, categorical_vars, numeric_vars, k) {
-    kmeans_result <- kmeansvar(X.quanti = data[, numeric_vars], X.quali = data[, categorical_vars], init = k, nstart = 10)
+    kmeans_result <- kmeansvar(X.quanti = data[, numeric_vars], 
+        X.quali = data[, categorical_vars], init = k, nstart = 10)
     return(kmeans_result)
 }
 
@@ -74,15 +77,18 @@ calculate_metrics <- function(kmeans_result) {
 # function to do kmeansvar with different k
 do_kmeansvar_with_different_k <- function(data, categorical_vars, numeric_vars, ks, nstart) {
     metrics <- sapply(ks, function(k) {
-        kmeans_result <- kmeansvar(X.quanti = data[, numeric_vars], X.quali = data[, categorical_vars], init = k,nstart)
+        kmeans_result <- kmeansvar(X.quanti = data[, numeric_vars], 
+            X.quali = data[, categorical_vars], init = k,nstart)
         return(calculate_metrics(kmeans_result))
     })
     return(metrics)
 }
 
-k2 <- do_kmeansvar_with_different_k(data, categorical_vars, numeric_vars, ks = c(1, 2, 3, 4, 5, 6), nstart = 5)
+k2 <- do_kmeansvar_with_different_k(data, categorical_vars, 
+    numeric_vars, ks = c(1, 2, 3, 4, 5, 6), nstart = 5)
 
-do_kmeansvar_with_different_k_ntimes_avg <- function(data, categorical_vars, numeric_vars, ks, ntimes , nstart) {
+do_kmeansvar_with_different_k_ntimes_avg <- function(data, categorical_vars, 
+    numeric_vars, ks, ntimes , nstart) {
     # zero matrix with nrow = 2 and ncol = length(ks)
     res <- matrix(0, nrow = 2, ncol = length(ks))
     for(i in 1:ntimes) {
@@ -96,7 +102,8 @@ do_kmeansvar_with_different_k_ntimes_avg <- function(data, categorical_vars, num
 ks = c(1, 2, 3, 4, 5, 6)
 N = 100
 nStart = 5
-res <- do_kmeansvar_with_different_k_ntimes_avg(data, categorical_vars, numeric_vars,ks,N,nStart)
+res <- do_kmeansvar_with_different_k_ntimes_avg(data, categorical_vars, 
+    numeric_vars,ks,N,nStart)
 # plot homogeneity vs k
 homogeneities <- res[1,]
 stH <- res[2,]
@@ -148,7 +155,6 @@ map_values <- function(data, categorical_var, prob) {
     missing_prob <- (prob-ifelse(value_b==0,0,cum_percentage[value_b])) / (percentage[value])
     # convert classes of data[, categorical_var] to index of percentage
     data_index <- match(data[, categorical_var], names(percentage))
-    # rows below value are 0, rows above value are 1 and rows equal to value are chosen randomly between 0 and 1 with probability missing_prob
     # concatenate categorical_var with "_binary_prob"
     categorical_var2 <- paste0(categorical_var, "_Binary_Prob")
     data[, categorical_var2] <- ifelse(
@@ -190,7 +196,19 @@ do_kmeansvar_with_different_probs <- function(data, categorical_vars,
 }
 
 # do kmeansvar with different prob 
-k = 3
+k = 2
+probs = c(seq(0.01, 0.99, 0.05),0.99)
+categorical_vars = c("Survived", "Pclass_Binary_Prob", "Sex", "Embarked_Binary_Prob")
+res <- do_kmeansvar_with_different_probs(data, categorical_vars, numeric_vars, probs, nStart, k , N)
+# plot homogeneity vs prob
+homogeneities <- res[1,]
+stH <- res[2,]
+plot(probs, homogeneities, type = "b", xlab = "prob", ylab = "Min Homogeneity", main = "Min Homogeneity vs prob")
+# plot standard homogeneity vs prob
+plot(probs, stH, type = "b", xlab = "prob", ylab = "Standard Homogeneity", main = "Standard Homogeneity vs prob")
+
+# do kmeansvar with different prob 
+k = 4
 probs = c(seq(0.01, 0.99, 0.05),0.99)
 categorical_vars = c("Survived", "Pclass_Binary_Prob", "Sex", "Embarked_Binary_Prob")
 res <- do_kmeansvar_with_different_probs(data, categorical_vars, numeric_vars, probs, nStart, k , N)
