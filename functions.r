@@ -3,6 +3,8 @@ install.packages("PCAmixdata")
 install.packages("cluster")
 install.packages("mclust")
 install.packages("readxl")
+install.packages("memoise")
+library(memoise)
 library(readxl)
 library(ClustOfVar)
 library(PCAmixdata)
@@ -102,6 +104,8 @@ evaluate_partition_stability <- function(data, categorical_vars, numeric_vars, k
     mean_ari <- mean(ari_values)
     return(mean_ari)
 }
+# cache function to avoid recomputing the same value
+evaluate_partition_stability_cache <- memoise(evaluate_partition_stability)
 
 NUM_METRICS <- 4
 calculate_metrics <- function(kmeans_result, data, categorical_vars, numeric_vars,k) {
@@ -109,7 +113,7 @@ calculate_metrics <- function(kmeans_result, data, categorical_vars, numeric_var
     standart_H <- (sum(kmeans_result$wss) - 1) / (length(numeric_vars) + length(categorical_vars) - 1)
     dist_matrix <- dist_mixed(data)
     silhouette <- mean(silhouette(kmeans_result$cluster, dist_matrix))
-    ari <- evaluate_partition_stability(data, categorical_vars, numeric_vars, k, kmeans_result$cluster)
+    ari <- evaluate_partition_stability_cache(data, categorical_vars, numeric_vars, k, kmeans_result$cluster)
     return(c(min_homogeneity, standart_H, silhouette, ari))
 }
 
@@ -128,7 +132,11 @@ do_kmeansvar_with_different_k_ntimes_avg <- function(data, categorical_vars, num
     res <- matrix(0, nrow = NUM_METRICS, ncol = length(ks))
     for (i in 1:ntimes) {
         print(i)
-        metrics <- do_kmeansvar_with_different_k(data, categorical_vars, numeric_vars, ks, nstart)
+        metrics <- do_kmeansvar_with_different_k(
+            data[c(categorical_vars,numeric_vars)], 
+            categorical_vars, 
+            numeric_vars, 
+            ks, nstart)
         res <- res + metrics
     }
     return(res / ntimes)
@@ -147,7 +155,7 @@ map_values_likely <- function(data, transforming_vars) {
     return(data)
 }
 
-p_tranform <- function(data, categorical_vars, numeric_vars, probs) {
+p_tranform <- function(data, categorical_var, prob) {
     # calculate the percentage of each value in their column
     percentage <- table(data[, categorical_var]) / nrow(data)
     # order table by percentage
@@ -178,8 +186,7 @@ map_values_p <- function(data, transformed_vars, prob) {
     for (var in transformed_vars) {
         transform <- p_tranform(data, var, prob)
         new_name <- paste0(var, "_Prob")
-        data[[new_name]] <- new[[transform]]
-        data[[new_name]] <- as.factor(data[[new_name]] + C)
+        data[[new_name]] <- as.factor(transform[[new_name]] + C)
         C <- C + 1000
     }
     return(data)
@@ -191,13 +198,15 @@ do_kmeansvar_with_different_prob <- function(data, categorical_vars, numeric_var
     return(metrics)
 }
 
-do_kmeansvar_with_different_probs <- function(data, categorical_vars, numeric_vars, probs, nstart, k, N) {
+do_kmeansvar_with_different_probs <- function(data, categorical_vars, numeric_vars, transformed_vars, probs, nstart, k, N) {
     res <- matrix(0, nrow = NUM_METRICS, ncol = length(probs))
     # for all probs
     for (i in 1:length(probs)) {
         res[, i] <- do_kmeansvar_with_different_prob(
             data, categorical_vars,
-            numeric_vars, probs[i], nstart, k, N
+            numeric_vars, 
+            transformed_vars,
+            probs[i], nstart, k, N
         )
     }
     return(res)
@@ -240,3 +249,49 @@ plot_metrics <- function(metrics, x, x_name, type, name = "Titanic") {
         plot(x, aris, type = "b", xlab = x_name, ylab = "ARI", main = main)
     })
 }
+
+run <- function(dataset,ks,N,nStart,probs,k_prob){
+    dataset <- init_dataset(dataset)
+    
+    dataset$metrics_normal <- do_kmeansvar_with_different_k_ntimes_avg(
+        dataset$data, 
+        dataset$categorical_vars, 
+        dataset$numeric_vars,
+        ks,
+        N,
+        nStart
+    )
+    plot_metrics(dataset$metrics_normal, ks,"k","Normal")
+    
+    dataset$data <- map_values_likely(dataset$data, dataset$transform)
+    dataset$metrics_binary <- do_kmeansvar_with_different_k_ntimes_avg(
+        dataset$data, 
+        dataset$binary_labels, 
+        dataset$numeric_vars,
+        ks,
+        N,
+        nStart
+    )
+    plot_metrics(dataset$metrics_binary, ks,"k","Binary")
+    
+    for(k in k_prob){
+        name <- paste0("metrics_prob_",k)
+        dataset[[name]] <- do_kmeansvar_with_different_probs(
+            dataset$data, 
+            dataset$prob_labels, 
+            dataset$numeric_vars,
+            dataset$transform,
+            probs,
+            nStart,
+            k,
+            N
+        )
+        type <- paste0("Prob k=",k)
+        plot_metrics(dataset[[name]], probs,"prob",type)
+    }
+    # save dataset
+    save(dataset, file = paste(dataset$name,"_results.rda"))
+
+    return(dataset)
+}
+
