@@ -12,8 +12,8 @@ dataset <- list(
 
 ks = c(1, 2, 3, 4, 5, 6)
 N = 10
-B_n = 10
-nStart = 3
+B_n = 5
+nStart = 2
 probs = c(seq(0.01, 0.99, 0.05),0.99)
 k_prob = c(2,4)
 

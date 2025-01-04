@@ -127,6 +127,7 @@ do_kmeansvar_with_different_k <- function(data, categorical_vars, numeric_vars, 
 do_kmeansvar_with_different_k_ntimes_avg <- function(data, categorical_vars, numeric_vars, ks, ntimes, nstart) {
     res <- matrix(0, nrow = NUM_METRICS, ncol = length(ks))
     for (i in 1:ntimes) {
+        print(i)
         metrics <- do_kmeansvar_with_different_k(data, categorical_vars, numeric_vars, ks, nstart)
         res <- res + metrics
     }
@@ -204,7 +205,7 @@ do_kmeansvar_with_different_probs <- function(data, categorical_vars, numeric_va
 
 save_plot_as_png <- function(file_name, plot_function) {
     png(file_name)
-    plot
+    plot_function()
     dev.off()
 }
 
@@ -214,23 +215,28 @@ plot_metrics <- function(metrics, x, x_name, type, name = "Titanic") {
     silhouettes <- metrics[3, ]
     aris <- metrics[4, ]
 
+    # create folder if it does not exist
+    if (!file.exists(name)) {
+        dir.create(name)
+    }
+
     main <- paste0("Min Homogeneity vs ", x_name, " (", type, ")")
-    save_plot_as_png(paste0(name,"/Min_Homogeneity_vs_", x_name, "_", type, ".png"), function() {
-     plot(x, homogeneities, type = "b", xlab = x_name, ylab = "Min Homogeneity", main = main)
+    save_plot_as_png(paste0(name, "/Min_Homogeneity_vs_", x_name, "_", type, ".png"), function() {
+        plot(x, homogeneities, type = "b", xlab = x_name, ylab = "Min Homogeneity", main = main)
     })
 
     main <- paste0("Standard Homogeneity vs ", x_name)
-    save_plot_as_png(paste0(name,"/Standard_Homogeneity_vs_", x_name, "_", type, ".png"), function() {
-     plot(x, stH, type = "b", xlab = x_name, ylab = "Standard Homogeneity", main = main)
+    save_plot_as_png(paste0(name, "/Standard_Homogeneity_vs_", x_name, "_", type, ".png"), function() {
+        plot(x, stH, type = "b", xlab = x_name, ylab = "Standard Homogeneity", main = main)
     })
 
     main <- paste0("Silhouette vs ", x_name)
-    save_plot_as_png(paste0(name,"/Silhouette_vs_", x_name, "_", type, ".png"), function() {
-     plot(x, silhouettes, type = "b", xlab = x_name, ylab = "Silhouette", main = main)
+    save_plot_as_png(paste0(name, "/Silhouette_vs_", x_name, "_", type, ".png"), function() {
+        plot(x, silhouettes, type = "b", xlab = x_name, ylab = "Silhouette", main = main)
     })
 
     main <- paste0("ARI vs ", x_name)
-    save_plot_as_png(paste0(name,"/ARI_vs_", x_name, "_", type, ".png"), function() {
-     plot(x, aris, type = "b", xlab = x_name, ylab = "ARI", main = main)
+    save_plot_as_png(paste0(name, "/ARI_vs_", x_name, "_", type, ".png"), function() {
+        plot(x, aris, type = "b", xlab = x_name, ylab = "ARI", main = main)
     })
 }
