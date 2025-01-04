@@ -1,21 +1,21 @@
 source("functions.r")
 
 datasets <- list(
-    list(
-        name = "Titanic",
-        file = c("data/Titanic-Dataset.csv"),
-        ext = c("csv"),
-        numeric_vars = c("Age", "SibSp", "Parch", "Fare"),
-        categorical_vars = c("Survived", "Pclass", "Sex", "Embarked"),
-        transform = c("Pclass", "Embarked")
-    ),
+    # list(
+    #     name = "Titanic",
+    #     file = c("data/Titanic-Dataset.csv"),
+    #     ext = c("csv"),
+    #     numeric_vars = c("Age", "SibSp", "Parch", "Fare"),
+    #     categorical_vars = c("Survived", "Pclass", "Sex", "Embarked"),
+    #     transform = c("Pclass", "Embarked")
+    # ),
     list(
         name = "AdultCensusIncome",
         file = c("data/adult.csv"),
         ext = c("csv"),
         numeric_vars = c("age", "fnlwgt", "education.num", "capital.gain", "capital.loss", "hours.per.week"),
         categorical_vars = c("workclass", "education", "marital.status", "occupation", "relationship", "race" , "sex", "native.country" , "income"),
-        transform = c("workclass", "education", "marital.status", "occupation", "race"),
+        transform = c("workclass", "education", "marital.status", "occupation", "race")
     ),
     list(
         name = "BankMarketing",
@@ -24,7 +24,7 @@ datasets <- list(
         numeric_vars = c("age", "balance", "day", "pdays","duration", "campaign", "previous"),
         categorical_vars = c("job", "marital", "education", "default", "housing", "loan", "contact", "month", "poutcome", "deposit"),
         transform = c("job", "marital", "education", "contact", "month", "poutcome")
-    ),
+    )
     # list(
     #     name = "Marketing",
     #     file = c("data/marketing_campaign.csv"),

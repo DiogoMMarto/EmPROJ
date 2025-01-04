@@ -1,9 +1,9 @@
-install.packages("ClustOfVar")
-install.packages("PCAmixdata")
-install.packages("cluster")
-install.packages("mclust")
-install.packages("readxl")
-install.packages("memoise")
+# install.packages("ClustOfVar")
+# install.packages("PCAmixdata")
+# install.packages("cluster")
+# install.packages("mclust")
+# install.packages("readxl")
+# install.packages("memoise")
 library(memoise)
 library(readxl)
 library(ClustOfVar)
@@ -47,11 +47,11 @@ init_dataset <- function(dataset) {
     # convert categorical variables to factors if they are not already
     letter = "A"
     for (var in dataset$categorical_vars) {
-        if( is.numeric(dataset$data[[var]]) ){
+        # if( is.numeric(dataset$data[[var]]) ){
             dataset$data[[var]] <- sapply(dataset$data[[var]], function(x) paste0(letter,x))
             dataset$data[[var]] <- as.factor(dataset$data[[var]])
             letter <- intToUtf8(utf8ToInt(letter) + 1)
-        }
+        # }
     }
     return(dataset)
 
@@ -131,7 +131,6 @@ do_kmeansvar_with_different_k <- function(data, categorical_vars, numeric_vars, 
 do_kmeansvar_with_different_k_ntimes_avg <- function(data, categorical_vars, numeric_vars, ks, ntimes, nstart) {
     res <- matrix(0, nrow = NUM_METRICS, ncol = length(ks))
     for (i in 1:ntimes) {
-        print(i)
         metrics <- do_kmeansvar_with_different_k(
             data[c(categorical_vars,numeric_vars)], 
             categorical_vars, 
