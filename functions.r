@@ -2,10 +2,10 @@
 # install.packages("PCAmixdata")
 # install.packages("cluster")
 # install.packages("mclust")
-# install.packages("readxl")
+# install.packages("openxlsx")
 # install.packages("memoise")
 library(memoise)
-library(readxl)
+library(openxlsx)
 library(ClustOfVar)
 library(PCAmixdata)
 library(cluster)
@@ -17,7 +17,7 @@ load_and_clean_data <- function(file_path, ext, vars, classes_col, min_freq = 10
         if (!requireNamespace("readxl", quietly = TRUE)) {
             stop("Package 'readxl' is required but not installed.")
         }
-        a <- readxl::read_excel(file_path)
+        a <- read.xlsx(file_path)
     } else if (ext == "csv") {
         a <- read.csv(file_path, stringsAsFactors = FALSE)
     } else {
@@ -48,7 +48,9 @@ load_and_clean_data <- function(file_path, ext, vars, classes_col, min_freq = 10
         class_counts <- table(a[[class_col]])
         common_classes <- names(class_counts[class_counts >= min_freq])
         a <- a[a[[class_col]] %in% common_classes, ]
+        print(table(a[[class_col]]))
     }
+
     # Limit to the first 3000 rows
     a <- head(a, 2500)
     
@@ -59,9 +61,9 @@ load_and_clean_data <- function(file_path, ext, vars, classes_col, min_freq = 10
 }
 
 
-init_dataset <- function(dataset) {
+init_dataset <- function(dataset,min_freq=100) {
     dataset$vars <- c(dataset$categorical_vars, dataset$numeric_vars)
-    dataset$data <- load_and_clean_data(dataset$file, dataset$ext, dataset$vars,dataset$categorical_vars)
+    dataset$data <- load_and_clean_data(dataset$file, dataset$ext, dataset$vars,dataset$categorical_vars,min_freq)
     dataset$binary_labels <- c()
     dataset$prob_labels <- c()
     for (var in dataset$categorical_vars) {
@@ -146,12 +148,14 @@ calculate_metrics <- function(kmeans_result, data, categorical_vars, numeric_var
     standart_H <- (sum(kmeans_result$wss) - 1) / (length(numeric_vars) + length(categorical_vars) - 1)
     dist_matrix <- dist_mixed(data)
     silhouette <- mean(silhouette(kmeans_result$cluster, dist_matrix))
-    ari <- evaluate_partition_stability_cache(data, categorical_vars, numeric_vars, k, kmeans_result$cluster)
+    ari <- 1
+    # ari <- evaluate_partition_stability_cache(data, categorical_vars, numeric_vars, k, kmeans_result$cluster)
     return(c(min_homogeneity, standart_H, silhouette, ari))
 }
 
 do_kmeansvar_with_different_k <- function(data, categorical_vars, numeric_vars, ks, nstart) {
     metrics <- sapply(ks, function(k) {
+      print(k)
         kmeans_result <- kmeansvar(
             X.quanti = data[, numeric_vars],
             X.quali = data[, categorical_vars], init = k, nstart
@@ -283,8 +287,8 @@ plot_metrics <- function(metrics, x, x_name, type, name = "Titanic") {
     })
 }
 
-run <- function(dataset,ks,N,nStart,probs,k_prob){
-    dataset <- init_dataset(dataset)
+run <- function(dataset,ks,N,nStart,probs,k_prob,min_freq=100){
+    dataset <- init_dataset(dataset,min_freq)
     constant_cols <- sapply(dataset$data, function(x) length(unique(x)) == 1)
     if (any(constant_cols)) {
         removed_cols <- names(constant_cols[constant_cols])
