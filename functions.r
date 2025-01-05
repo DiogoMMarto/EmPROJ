@@ -11,26 +11,57 @@ library(PCAmixdata)
 library(cluster)
 library(mclust)
 
-load_and_clean_data <- function(file_path, ext, vars) {
-    if (ext == "csv") {
-        a <- read.csv(file_path)
-    } else if (ext == "xlsx") {
-        a <- read_excel(file_path)
+load_and_clean_data <- function(file_path, ext, vars, classes_col, min_freq = 100) {
+    # Load necessary library for reading Excel files
+    if (ext == "xlsx") {
+        if (!requireNamespace("readxl", quietly = TRUE)) {
+            stop("Package 'readxl' is required but not installed.")
+        }
+        a <- readxl::read_excel(file_path)
+    } else if (ext == "csv") {
+        a <- read.csv(file_path, stringsAsFactors = FALSE)
     } else {
-        stop("File format not supported")
+        stop("File format not supported. Please use 'csv' or 'xlsx'.")
     }
-    a <- subset(a, select = c(vars))
+    
+    # Check if provided columns exist in the dataset
+    missing_vars <- setdiff(vars, colnames(a))
+    if (length(missing_vars) > 0) {
+        stop(sprintf("The following variables are not in the dataset: %s", paste(missing_vars, collapse = ", ")))
+    }
+    
+    # Select only the specified columns
+    a <- subset(a, select = vars)
+    
+    # Clean the data by removing rows with missing values
     cat("Checking for missing values and removing rows with NA...\n")
     rows_before <- nrow(a)
     a <- na.omit(a)
+    
+    # Filter out rare classes
+    for(class_col in classes_col){
+        if (!class_col %in% colnames(a)) {
+            stop(sprintf("The specified class column '%s' is not in the dataset.", class_col))
+        }
+        
+        cat("Filtering out rare classes...\n")
+        class_counts <- table(a[[class_col]])
+        common_classes <- names(class_counts[class_counts >= min_freq])
+        a <- a[a[[class_col]] %in% common_classes, ]
+    }
+    # Limit to the first 3000 rows
+    a <- head(a, 2500)
+    
     rows_after <- nrow(a)
+    # Print summary
     cat(sprintf("\nRows before cleaning: %d\nRows after cleaning: %d\n", rows_before, rows_after))
     return(a)
 }
 
+
 init_dataset <- function(dataset) {
     dataset$vars <- c(dataset$categorical_vars, dataset$numeric_vars)
-    dataset$data <- load_and_clean_data(dataset$file, dataset$ext, dataset$vars)
+    dataset$data <- load_and_clean_data(dataset$file, dataset$ext, dataset$vars,dataset$categorical_vars)
     dataset$binary_labels <- c()
     dataset$prob_labels <- c()
     for (var in dataset$categorical_vars) {
@@ -87,6 +118,7 @@ dist_mixed <- function(data) {
 B_n <- 10
 evaluate_partition_stability <- function(data, categorical_vars, numeric_vars, k, initial_hierarchy, B = B_n) {
     ari_values <- numeric(B)
+    count <- 0 
     for (i in 1:B) {
         tryCatch({
         bootstrap_sample <- data[sample(1:nrow(data), replace = TRUE), ]
@@ -96,12 +128,13 @@ evaluate_partition_stability <- function(data, categorical_vars, numeric_vars, k
             init = k, nstart = 10
         )
         ari_values[i] <- adjustedRandIndex(initial_hierarchy, kmeans_result$cluster)
+        count <- count + 1 
     }, error = function(e) {
         cat("Error in bootstrap sample\n" , i , k)
     })
-
     }
-    mean_ari <- mean(ari_values)
+    if(count == 0) {return(0)}
+    mean_ari <- sum(ari_values) / count
     return(mean_ari)
 }
 # cache function to avoid recomputing the same value
@@ -131,6 +164,7 @@ do_kmeansvar_with_different_k <- function(data, categorical_vars, numeric_vars, 
 do_kmeansvar_with_different_k_ntimes_avg <- function(data, categorical_vars, numeric_vars, ks, ntimes, nstart) {
     res <- matrix(0, nrow = NUM_METRICS, ncol = length(ks))
     for (i in 1:ntimes) {
+        print(i)
         metrics <- do_kmeansvar_with_different_k(
             data[c(categorical_vars,numeric_vars)], 
             categorical_vars, 
@@ -251,7 +285,11 @@ plot_metrics <- function(metrics, x, x_name, type, name = "Titanic") {
 
 run <- function(dataset,ks,N,nStart,probs,k_prob){
     dataset <- init_dataset(dataset)
-    
+    constant_cols <- sapply(dataset$data, function(x) length(unique(x)) == 1)
+    if (any(constant_cols)) {
+        removed_cols <- names(constant_cols[constant_cols])
+        cat(sprintf("Removed columns with identical categories: %s\n", paste(removed_cols, collapse = ", ")))
+    }
     dataset$metrics_normal <- do_kmeansvar_with_different_k_ntimes_avg(
         dataset$data, 
         dataset$categorical_vars, 

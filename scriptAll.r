@@ -22,7 +22,7 @@ datasets <- list(
         file = c("data/bank.csv"),
         ext = c("csv"),
         numeric_vars = c("age", "balance", "day", "pdays","duration", "campaign", "previous"),
-        categorical_vars = c("job", "marital", "education", "default", "housing", "loan", "contact", "month", "poutcome", "deposit"),
+        categorical_vars = c("job", "marital", "education", "default", "housing", "loan", "contact", "month", "poutcome"),
         transform = c("job", "marital", "education", "contact", "month", "poutcome")
     )
     # list(
@@ -35,7 +35,7 @@ datasets <- list(
 
 ks = c(1, 2, 3, 4, 5, 6)
 N = 100
-nStart = 3
+nStart = 2
 probs = c(seq(0.01, 0.99, 0.05),0.99)
 k_prob = c(2,4)
 
