@@ -41,8 +41,11 @@ k_prob = c(2,4)
 
 for(dataset in datasets){
     print(paste("Running dataset", dataset$name))
-    dataset <- run(dataset, ks, N, nStart, probs, k_prob)
+    # dataset <- run(dataset, ks, N, nStart, probs, k_prob)
+    plot_dataset(dataset$name, ks, N, nStart, probs, k_prob)
 }
+
+print("Done")
 
 # do plots where you have the metrics but each plot has multiple datasets
 # for(type in c("metrics_normal", "metrics_binary","metrics_prob")){

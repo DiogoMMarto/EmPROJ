@@ -298,7 +298,7 @@ run <- function(dataset,ks,N,nStart,probs,k_prob){
         N,
         nStart
     )
-    plot_metrics(dataset$metrics_normal, ks,"k","Normal")
+    plot_metrics(dataset$metrics_normal, ks,"k","Normal",dataset$name)
     
     dataset$data <- map_values_likely(dataset$data, dataset$transform)
     dataset$metrics_binary <- do_kmeansvar_with_different_k_ntimes_avg(
@@ -309,7 +309,7 @@ run <- function(dataset,ks,N,nStart,probs,k_prob){
         N,
         nStart
     )
-    plot_metrics(dataset$metrics_binary, ks,"k","Binary")
+    plot_metrics(dataset$metrics_binary, ks,"k","Binary",dataset$name)
     
     for(k in k_prob){
         name <- paste0("metrics_prob_",k)
@@ -324,11 +324,26 @@ run <- function(dataset,ks,N,nStart,probs,k_prob){
             N
         )
         type <- paste0("Prob k=",k)
-        plot_metrics(dataset[[name]], probs,"prob",type)
+        plot_metrics(dataset[[name]], probs,"prob",type,dataset$name)
     }
     # save dataset
     save(dataset, file = paste(dataset$name,"_results.rda"))
 
+    return(dataset)
+}
+
+plot_dataset <- function(name,ks,N,nStart,probs,k_prob) {
+
+    load(paste(dataset$name,"_results.rda"))
+
+    plot_metrics(dataset$metrics_normal, ks,"k","Normal",dataset$name)
+    plot_metrics(dataset$metrics_binary, ks,"k","Binary",dataset$name)
+    
+    for(k in k_prob){
+        name <- paste0("metrics_prob_",k)
+        type <- paste0("Prob k=",k)
+        plot_metrics(dataset[[name]], probs,"prob",type,dataset$name)
+    }
     return(dataset)
 }
 
