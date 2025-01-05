@@ -1,14 +1,14 @@
 source("functions.r")
 
 datasets <- list(
-    # list(
-    #     name = "Titanic",
-    #     file = c("data/Titanic-Dataset.csv"),
-    #     ext = c("csv"),
-    #     numeric_vars = c("Age", "SibSp", "Parch", "Fare"),
-    #     categorical_vars = c("Survived", "Pclass", "Sex", "Embarked"),
-    #     transform = c("Pclass", "Embarked")
-    # ),
+    list(
+        name = "Titanic",
+        file = c("data/Titanic-Dataset.csv"),
+        ext = c("csv"),
+        numeric_vars = c("Age", "SibSp", "Parch", "Fare"),
+        categorical_vars = c("Survived", "Pclass", "Sex", "Embarked"),
+        transform = c("Pclass", "Embarked")
+    ),
     list(
         name = "AdultCensusIncome",
         file = c("data/adult.csv"),
