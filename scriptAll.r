@@ -46,7 +46,7 @@ N = 100
 nStart = 2
 probs = c(seq(0.01, 0.99, 0.05),0.99)
 k_prob = c(2,4)
-min_freq = 250
+min_freq = 500            
 
 for(dataset in datasets){
     print(paste("Running dataset", dataset$name))
