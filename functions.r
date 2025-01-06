@@ -51,7 +51,7 @@ load_and_clean_data <- function(file_path, ext, vars, classes_col, min_freq = 10
         print(table(a[[class_col]]))
     }
 
-    # Limit to the first 3000 rows
+    # Limit to the first 2500 rows
     a <- head(a, 2500)
     
     rows_after <- nrow(a)
@@ -148,14 +148,13 @@ calculate_metrics <- function(kmeans_result, data, categorical_vars, numeric_var
     standart_H <- (sum(kmeans_result$wss) - 1) / (length(numeric_vars) + length(categorical_vars) - 1)
     dist_matrix <- dist_mixed(data)
     silhouette <- mean(silhouette(kmeans_result$cluster, dist_matrix))
-    ari <- 1
-    # ari <- evaluate_partition_stability_cache(data, categorical_vars, numeric_vars, k, kmeans_result$cluster)
+    # ari <- 1
+    ari <- evaluate_partition_stability_cache(data, categorical_vars, numeric_vars, k, kmeans_result$cluster)
     return(c(min_homogeneity, standart_H, silhouette, ari))
 }
 
 do_kmeansvar_with_different_k <- function(data, categorical_vars, numeric_vars, ks, nstart) {
     metrics <- sapply(ks, function(k) {
-      print(k)
         kmeans_result <- kmeansvar(
             X.quanti = data[, numeric_vars],
             X.quali = data[, categorical_vars], init = k, nstart

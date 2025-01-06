@@ -25,20 +25,25 @@ datasets <- list(
     #     categorical_vars = c("job", "marital", "education", "default", "housing", "loan", "contact", "month", "poutcome"),
     #     transform = c("job", "marital", "education", "contact", "month", "poutcome")
     # )
-    # list(
-    #     name = "Marketing",
-    #     file = c("data/marketing_campaign.csv"),
-    #     ext = c("csv"),
-    #     numeric_vars = c("age",)
-    # )
     list(
-        name = "OnlineRetail",
-        file = "data/Online Retail.xlsx",
-        ext = c("xlsx"),
-        numeric_vars = c("Quantity","UnitPrice"),
-        categorical_vars = c("StockCode", "Description","Country"),
-        transform = c("Country")
+        name = "Marketing",
+        file = c("data/marketing_campaign.csv"),
+        ext = c("csv"),
+        numeric_vars = c("Year_Birth","Income","Kidhome",
+                        "Teenhome","Recency","MntWines","MntFruits",
+                        "MntMeatProducts","MntFishProducts",
+                        "NumDealsPurchases","NumWebPurchases"),
+        categorical_vars = c("Education","Marital_Status","Response"),
+        transform = c("Education")
     )
+    # list(
+    #     name = "OnlineRetail",
+    #     file = "data/Online Retail.xlsx",
+    #     ext = c("xlsx"),
+    #     numeric_vars = c("Quantity","UnitPrice"),
+    #     categorical_vars = c("StockCode", "Description","Country"),
+    #     transform = c("Country")
+    # )
 )
 
 ks = c(1, 2, 3, 4, 5, 6)
@@ -46,7 +51,7 @@ N = 100
 nStart = 2
 probs = c(seq(0.01, 0.99, 0.05),0.99)
 k_prob = c(2,4)
-min_freq = 500            
+min_freq = 100            
 
 for(dataset in datasets){
     print(paste("Running dataset", dataset$name))
