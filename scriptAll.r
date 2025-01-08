@@ -43,7 +43,7 @@ datasets <- list(
     #     numeric_vars = c("Quantity","UnitPrice"),
     #     categorical_vars = c("StockCode", "Description","Country"),
     #     transform = c("Country")
-    # )
+    # ) # TOO SMALL AND CAUSES PROBLEMS WITH PCAMIX BCS OF VANISHING RARE CLASSES
 )
 
 ks = c(1, 2, 3, 4, 5, 6)
